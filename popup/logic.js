@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // --- Scan pane elements ---
   const scanBtn     = document.getElementById('scanBtn');
   const aiScanBtn   = document.getElementById('aiScanBtn');
   const clearBtn    = document.getElementById('clearBtn');
@@ -7,10 +8,116 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusText  = document.getElementById('statusText');
   const riskBadge   = document.getElementById('riskBadge');
   const lineCount   = document.getElementById('lineCount');
+  const modelLabel  = document.getElementById('modelLabel');
 
-  const OLLAMA_URL   = 'http://localhost:11434/api/chat';
-  const OLLAMA_MODEL = 'qwen3.5:9b';
-  const TODAY        = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  // --- Config pane elements ---
+  const tabScan          = document.getElementById('tabScan');
+  const tabConfig        = document.getElementById('tabConfig');
+  const paneScan         = document.getElementById('paneScan');
+  const paneConfig       = document.getElementById('paneConfig');
+  const ollamaDot        = document.getElementById('ollamaDot');
+  const ollamaStatusText = document.getElementById('ollamaStatusText');
+  const ollamaError      = document.getElementById('ollamaError');
+  const ollamaRefreshBtn = document.getElementById('ollamaRefreshBtn');
+  const modelInput       = document.getElementById('modelInput');
+  const saveModelBtn     = document.getElementById('saveModelBtn');
+  const savedConfirm     = document.getElementById('savedConfirm');
+  const installedSection = document.getElementById('installedSection');
+  const modelList        = document.getElementById('modelList');
+
+  const OLLAMA_URL = 'http://localhost:11434/api/chat';
+  const OLLAMA_TAGS_URL = 'http://localhost:11434/api/tags';
+  const TODAY      = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const DEFAULT_MODEL = 'qwen3.5:9b';
+
+  // --- Load persisted model ---
+  let activeModel = DEFAULT_MODEL;
+  try {
+    const stored = await chrome.storage.local.get('ollamaModel');
+    if (stored.ollamaModel) activeModel = stored.ollamaModel;
+  } catch { /* storage unavailable, use default */ }
+  modelInput.value = activeModel;
+  modelLabel.textContent = activeModel;
+
+  // --- Tab switching ---
+  tabScan.addEventListener('click', () => {
+    paneScan.classList.remove('hidden');
+    paneConfig.classList.add('hidden');
+    tabScan.classList.add('tab-active');
+    tabConfig.classList.remove('tab-active');
+  });
+
+  tabConfig.addEventListener('click', () => {
+    paneConfig.classList.remove('hidden');
+    paneScan.classList.add('hidden');
+    tabConfig.classList.add('tab-active');
+    tabScan.classList.remove('tab-active');
+    checkOllamaStatus(); // refresh status each time config is opened
+  });
+
+  // --- Ollama status check ---
+  async function checkOllamaStatus() {
+    ollamaDot.className = 'dot dot-unknown';
+    ollamaStatusText.textContent = 'checking...';
+    ollamaError.style.display = 'none';
+    installedSection.style.display = 'none';
+
+    try {
+      const res = await fetch(OLLAMA_TAGS_URL, { method: 'GET' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      const models = (data.models || []).map(m => m.name).filter(Boolean);
+
+      ollamaDot.className = 'dot dot-online';
+      ollamaStatusText.textContent = `ONLINE — ${models.length} model(s) loaded`;
+
+      // Populate installed models list
+      modelList.innerHTML = '';
+      if (models.length > 0) {
+        models.forEach(name => {
+          const item = document.createElement('div');
+          item.className = 'model-item' + (name === activeModel ? ' model-active' : '');
+          item.textContent = name;
+          item.addEventListener('click', () => {
+            modelInput.value = name;
+            modelList.querySelectorAll('.model-item').forEach(i => i.classList.remove('model-active'));
+            item.classList.add('model-active');
+          });
+          modelList.appendChild(item);
+        });
+        installedSection.style.display = 'block';
+      }
+    } catch (err) {
+      ollamaDot.className = 'dot dot-offline';
+      ollamaStatusText.textContent = 'OFFLINE';
+      ollamaError.textContent = `Cannot reach localhost:11434 — ${err.message}`;
+      ollamaError.style.display = 'block';
+    }
+  }
+
+  ollamaRefreshBtn.addEventListener('click', checkOllamaStatus);
+
+  // --- Save model ---
+  saveModelBtn.addEventListener('click', async () => {
+    const newModel = modelInput.value.trim();
+    if (!newModel) return;
+
+    activeModel = newModel;
+    modelLabel.textContent = activeModel;
+
+    try {
+      await chrome.storage.local.set({ ollamaModel: activeModel });
+    } catch { /* storage write failed, model still updated for this session */ }
+
+    // Update active highlight in the installed list
+    modelList.querySelectorAll('.model-item').forEach(item => {
+      item.classList.toggle('model-active', item.textContent === activeModel);
+    });
+
+    savedConfirm.style.display = 'block';
+    setTimeout(() => { savedConfirm.style.display = 'none'; }, 2000);
+  });
 
   // Cache email data so AI scan can reuse it without a second content-script call
   let lastEmailData = null;
@@ -197,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scanBtn.disabled   = true;
 
     logDivider();
-    log('[ AI DEEP SCAN — qwen3.5:9b ]', 'ai');
+    log(`[ AI DEEP SCAN — ${activeModel} ]`, 'ai');
     logDivider();
 
     try {
@@ -254,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: OLLAMA_MODEL,
+          model: activeModel,
           messages: [
             {
               role: 'system',
@@ -471,7 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return `# Phishing Scan Report
 
 > **Generated:** ${ts}
-> **Tool:** PHISH.Scanner v1.1 (qwen3.5:9b local AI)
+> **Tool:** PHISH.Scanner v1.1 (${activeModel} local AI)
 > **Overall Verdict:** ${overallVerdict}
 
 ---
@@ -502,7 +609,7 @@ ${ruleIndicators}
 
 ---
 
-## AI Analysis (qwen3.5:9b)
+## AI Analysis (${activeModel})
 
 **Verdict:** ${aiVerdict}
 

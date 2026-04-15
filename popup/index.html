@@ -17,42 +17,120 @@
       <div class="header-sub">// EMAIL THREAT ANALYSIS SYSTEM v1.1</div>
     </div>
 
-    <!-- STATUS BAR -->
-    <div class="status-bar">
-      <span class="status-label">STATUS::</span>
-      <span id="statusText" class="status-value status-ready">READY</span>
-      <span id="riskBadge" class="risk-badge"></span>
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+      <button id="tabScan"   class="tab-btn tab-active">[ SCAN ]</button>
+      <button id="tabConfig" class="tab-btn">[ CONFIG ]</button>
     </div>
 
-    <!-- SCAN BUTTONS -->
-    <div class="controls">
-      <button id="scanBtn" class="btn-primary">
-        [ SCAN_EMAIL ]
-      </button>
-      <button id="clearBtn" class="btn-secondary">
-        [ CLEAR ]
-      </button>
-    </div>
-    <div class="controls">
-      <button id="aiScanBtn" class="btn-ai">
-        [ AI_DEEP_SCAN // qwen3.5:9b ]
-      </button>
-    </div>
-    <div class="controls">
-      <button id="downloadBtn" class="btn-download" disabled>
-        [ DOWNLOAD_REPORT ]
-      </button>
-    </div>
+    <!-- ═══════════════ SCAN PANE ═══════════════ -->
+    <div id="paneScan" class="tab-pane">
 
-    <!-- OUTPUT -->
-    <div class="output-container">
-      <div class="output-label">// OUTPUT_BUFFER <span id="lineCount"></span></div>
-      <div id="outputDiv" class="output-scroll"></div>
-    </div>
+      <div class="status-bar">
+        <span class="status-label">STATUS::</span>
+        <span id="statusText" class="status-value status-ready">READY</span>
+        <span id="riskBadge" class="risk-badge"></span>
+      </div>
 
-    <!-- FOOTER -->
+      <div class="controls">
+        <button id="scanBtn" class="btn-primary">[ SCAN_EMAIL ]</button>
+        <button id="clearBtn" class="btn-secondary">[ CLEAR ]</button>
+      </div>
+      <div class="controls">
+        <button id="aiScanBtn" class="btn-ai">
+          [ AI_DEEP_SCAN // <span id="modelLabel">qwen3.5:9b</span> ]
+        </button>
+      </div>
+      <div class="controls">
+        <button id="downloadBtn" class="btn-download" disabled>
+          [ DOWNLOAD_REPORT ]
+        </button>
+      </div>
+
+      <div class="output-container">
+        <div class="output-label">// OUTPUT_BUFFER <span id="lineCount"></span></div>
+        <div id="outputDiv" class="output-scroll"></div>
+      </div>
+
+    </div><!-- /paneScan -->
+
+    <!-- ═══════════════ CONFIG PANE ═══════════════ -->
+    <div id="paneConfig" class="tab-pane hidden">
+
+      <!-- OLLAMA STATUS -->
+      <div class="cfg-section">
+        <div class="cfg-title">// OLLAMA_STATUS</div>
+        <div class="ollama-row">
+          <span id="ollamaDot" class="dot dot-unknown"></span>
+          <span id="ollamaStatusText" class="ollama-status-txt">checking...</span>
+          <button id="ollamaRefreshBtn" class="btn-tiny">[ ↺ REFRESH ]</button>
+        </div>
+        <div id="ollamaError" class="cfg-error" style="display:none"></div>
+      </div>
+
+      <!-- START COMMAND -->
+      <div class="cfg-section">
+        <div class="cfg-title">// START_COMMAND</div>
+        <div class="cfg-sub">Mac / Linux — run in terminal:</div>
+        <div class="code-cmd">OLLAMA_ORIGINS=chrome-extension://* ollama serve</div>
+        <div class="cfg-sub" style="margin-top:6px">Windows — PowerShell:</div>
+        <div class="code-cmd">$env:OLLAMA_ORIGINS="chrome-extension://*"; ollama serve</div>
+        <div class="cfg-sub cfg-note">This must be running before using AI_DEEP_SCAN.</div>
+      </div>
+
+      <!-- MODEL CONFIG -->
+      <div class="cfg-section">
+        <div class="cfg-title">// MODEL_CONFIG</div>
+        <div class="cfg-sub">Active model (saved across sessions):</div>
+        <div class="model-row">
+          <input id="modelInput" class="model-input" type="text"
+                 value="qwen3.5:9b" spellcheck="false" autocomplete="off">
+          <button id="saveModelBtn" class="btn-tiny btn-save">[ SAVE ]</button>
+        </div>
+        <div id="savedConfirm" class="cfg-confirm" style="display:none">✓ saved</div>
+
+        <div id="installedSection" style="display:none">
+          <div class="cfg-sub" style="margin-top:8px">Installed on this machine — click to select:</div>
+          <div id="modelList" class="model-list"></div>
+        </div>
+      </div>
+
+      <!-- DOCS -->
+      <div class="cfg-section">
+        <div class="cfg-title">// DOCUMENTATION</div>
+        <div class="cfg-doc">
+          <div class="doc-entry">
+            <span class="doc-cmd">SCAN_EMAIL</span>
+            Rule-based analysis. Checks urgency language, typosquatted
+            domains, URL shorteners, IP-address links, and sender spoofing.
+            Instant — no model required.
+          </div>
+          <div class="doc-entry">
+            <span class="doc-cmd">AI_DEEP_SCAN</span>
+            Sends extracted email data to your local Ollama model for
+            contextual phishing analysis. Auth signals (mailed-by,
+            signed-by, TLS) are included as context. No data leaves
+            your machine.
+          </div>
+          <div class="doc-entry">
+            <span class="doc-cmd">DOWNLOAD_REPORT</span>
+            Generates a Markdown report with defanged URLs, auth signals,
+            rule indicators, and full AI response. Suitable for Jira,
+            Linear, or any Markdown-rendering ticketing system.
+          </div>
+          <div class="doc-entry">
+            <span class="doc-cmd">PRIVACY</span>
+            All analysis is local. The only network calls made are to
+            <span class="doc-mono">mail.google.com</span> (Gmail DOM read)
+            and <span class="doc-mono">localhost:11434</span> (Ollama).
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /paneConfig -->
+
     <footer>
-      SCANNER_V1.1 // READ-ONLY // LOCAL_ONLY // GMAIL_CONTEXT
+      SCANNER_V1.1 // LOCAL_ONLY // GMAIL_CONTEXT
     </footer>
 
   </div>
