@@ -1,34 +1,52 @@
 // Content script — runs inside the Gmail tab
 
+// Field length caps — prevents unbounded data being sent to the popup
+const MAX_SUBJECT_LEN = 500;
+const MAX_FROM_LEN    = 200;
+const MAX_BODY_LEN    = 3000;
+const MAX_LINK_TEXT   = 100;
+const MAX_LINK_URL    = 2000;
+const MAX_LINKS       = 30;
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action !== 'extractData') return;
+  // Only accept messages from our own extension
+  if (sender.id !== chrome.runtime.id) return;
+  // Only handle the one action we expect
+  if (typeof request !== 'object' || request.action !== 'extractData') return;
 
   // Use async IIFE so we can await inside the listener
   (async () => {
     try {
       // --- SUBJECT ---
       const subjectEl = document.querySelector('h2.hP');
-      const subject   = subjectEl ? subjectEl.textContent.trim() : '';
+      const subject   = (subjectEl ? subjectEl.textContent.trim() : '').substring(0, MAX_SUBJECT_LEN);
 
       // --- SENDER ---
       const senderEl = document.querySelector('span.gD');
-      const from     = senderEl
+      const from     = (senderEl
         ? (senderEl.getAttribute('email') || senderEl.textContent).trim()
-        : '';
+        : '').substring(0, MAX_FROM_LEN);
 
       // --- EMAIL BODY ---
       const bodyEls = document.querySelectorAll('.a3s.aiL, .ii.gt .a3s');
       let body = '';
       bodyEls.forEach(el => { body += el.innerText + '\n'; });
-      body = body.trim().substring(0, 3000);
+      body = body.trim().substring(0, MAX_BODY_LEN);
 
-      // --- LINKS (only from inside the email body) ---
+      // --- LINKS (only from inside the email body, capped) ---
       const links = [];
       document.querySelectorAll('.a3s a[href], .ii.gt a[href]').forEach(a => {
+        if (links.length >= MAX_LINKS) return;
         const href = a.getAttribute('href');
-        if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
-          links.push({ text: a.textContent.trim().substring(0, 80), url: href });
-        }
+        if (!href) return;
+        // Only accept http/https URLs — drop javascript:, data:, etc.
+        if (!href.startsWith('http://') && !href.startsWith('https://')) return;
+        // Validate the URL is actually parseable before storing it
+        try { new URL(href); } catch { return; }
+        links.push({
+          text: a.textContent.trim().substring(0, MAX_LINK_TEXT),
+          url:  href.substring(0, MAX_LINK_URL),
+        });
       });
 
       if (!subject && !from && !body) {
@@ -41,7 +59,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       sendResponse({ subject, from, body, links, authSignals });
     } catch (err) {
-      sendResponse({ error: err.message });
+      // Never send raw error stack to popup — only the message
+      sendResponse({ error: String(err.message).substring(0, 200) });
     }
   })();
 
