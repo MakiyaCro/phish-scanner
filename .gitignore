@@ -1,0 +1,111 @@
+# ============================================================
+# CHROME EXTENSION SPECIFIC
+# ============================================================
+# Build artifacts from Chrome extension build tools
+# (if using tools like web-ext, webpack, etc.)
+*.chromium-extension/
+*.crx
+*.pem
+*.pfx
+# Build outputs from common build tools
+build/
+dist/
+out/
+.output/
+.temp/
+
+# ============================================================
+# IDE / EDITOR FILES
+# ============================================================
+# VS Code
+.vscode/
+*.code-workspace
+# Sublime Text
+.*sublime*
+# IntelliJ/WebStorm
+.idea/
+*.iml
+*.ipr
+*.iws
+# Atom
+.atom/
+# JetBrains
+*.idea/
+# Vim
+.swp
+.swx
+# Visual Studio Code (additional)
+*.codekit*
+
+# ============================================================
+# OPERATING SYSTEM FILES
+# ============================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._
+eMacBookPro
+AppleTV
+iMacPro
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+# Linux (common temp files)
+.cache/
+.history
+.bash_history
+.python_history
+
+# ============================================================
+# NODE / YARN / PACKAGES (if applicable)
+# ============================================================
+node_modules/
+package-lock.json
+yarn.lock
+.npm/
+.yarn/
+.cache/
+
+# ============================================================
+# ENVIRONMENT FILES
+# ============================================================
+.env
+.env.local
+.env.*.local
+*.config.js
+# (Not using but good to have in gitignore)
+*.pem
+*.p12
+*.pfx
+
+# ============================================================
+# CHROME / BROWSER CACHE
+# ============================================================
+# Chrome's own cache
+chrome-cache/
+chrome-extension-cache/
+
+# ============================================================
+# GENERATED CSS / JS
+# ============================================================
+# (Keep these for better git performance)
+*.min.css
+*.min.js
+css/
+js/
+sass/
+scss/
+less/
+
+# ============================================================
+# TEMPORARY FILES
+# ============================================================
+*.bak
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+*~
