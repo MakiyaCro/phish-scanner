@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PHISH.Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="crt">
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-title">
+        <span class="blink">▮</span> PHISH.Scanner <span class="blink">▮</span>
+      </div>
+      <div class="header-sub">// EMAIL THREAT ANALYSIS SYSTEM v1.1</div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+      <span class="status-label">STATUS::</span>
+      <span id="statusText" class="status-value status-ready">READY</span>
+      <span id="riskBadge" class="risk-badge"></span>
+    </div>
+
+    <!-- SCAN BUTTON -->
+    <div class="controls">
+      <button id="scanBtn" class="btn-primary">
+        [ SCAN_EMAIL ]
+      </button>
+      <button id="clearBtn" class="btn-secondary">
+        [ CLEAR ]
+      </button>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="output-container">
+      <div class="output-label">// OUTPUT_BUFFER <span id="lineCount"></span></div>
+      <div id="outputDiv" class="output-scroll"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      SCANNER_V1.1 // READ-ONLY // LOCAL_ONLY // GMAIL_CONTEXT
+    </footer>
+
+  </div>
+  <script src="logic.js"></script>
+</body>
+</html>
